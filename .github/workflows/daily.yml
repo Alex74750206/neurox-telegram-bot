@@ -7,18 +7,30 @@ on:
   push:
     branches: [main]
 
-
 jobs:
   post:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Send daily post to Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: python poster.py
+
+      - name: Keep repo active
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          date -u > last_run.txt
+          git add last_run.txt
+          git commit -m "auto: $(date -u +%Y-%m-%d)" || echo "ok"
+          git push
